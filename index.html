@@ -1,29 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8">
     <title>Experiment</title>
+    <!-- CSS -->
     <link href="dist/jspsych.css" rel="stylesheet">
+    <!-- jsPsych 核心库 -->
     <script src="dist/jspsych.js"></script>
+    <!-- 需要的插件 -->
     <script src="dist/plugins/jspsych-html-button-response.js"></script>
 </head>
 <body>
+    <h1 style="text-align:center; margin-top:50px;">Loading Experiment...</h1>
+
     <script>
-        // 实验逻辑写在这里
-        var timeline = [];
+        // 等待页面完全加载
+        window.addEventListener('load', function() {
+            // 测试 jsPsych 是否正常工作
+            var timeline = [];
 
-        var welcome = {
-            type: 'html-button-response',
-            stimulus: '<p>Welcome to the experiment!</p >',
-            choices: ['Start']
-        };
-        timeline.push(welcome);
+            var welcome = {
+                type: 'html-button-response',
+                stimulus: '<p style="font-size:20px; text-align:center;">Welcome to the experiment!</p >',
+                choices: ['Start']
+            };
 
-        jsPsych.init({
-            timeline: timeline,
-            on_finish: function() {
-                jsPsych.data.displayData();
-            }
+            timeline.push(welcome);
+
+            jsPsych.init({
+                timeline: timeline,
+                display_element: document.body,
+                on_finish: function() {
+                    // 即使没有实验，也可以显示数据
+                    jsPsych.data.displayData('json'); 
+                }
+            });
         });
     </script>
 </body>
