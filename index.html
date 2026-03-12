@@ -1,71 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>BART Experiment</title>
-    <link rel="stylesheet" href="dist/jspsych.css">
-    <script src="dist/jspsych.js"></script>
-    <script src="dist/plugins/jspsych-html-button-response.js"></script>
-    <script src="dist/plugins/jspsych-html-keyboard-response.js"></script>
+<meta charset="UTF-8">
+<title>Mini Tetris Test</title>
+<style>
+  body { background: #111; display: flex; justify-content: center; align-items: center; height: 100vh; margin:0; }
+  canvas { background: #222; border: 2px solid #fff; }
+</style>
 </head>
 <body>
+<canvas id="tetris" width="240" height="400"></canvas>
 <script>
-    // 初始化变量
-    let totalEarned = 0;
-    const maxPumpsPerBalloon = 12; // 每个气球最大可泵次数
-    const rewardPerPump = 0.5;
-    const nBalloons = 5; // 测试用5个气球
+const canvas = document.getElementById('tetris');
+const ctx = canvas.getContext('2d');
+const scale = 20; // 每个方块大小
+const rows = canvas.height / scale;
+const cols = canvas.width / scale;
 
-    // 创建 timeline
-    let timeline = [];
+// 创建空矩阵
+function createMatrix(w, h) {
+    const matrix = [];
+    while(h--) matrix.push(new Array(w).fill(0));
+    return matrix;
+}
 
-    for (let i = 1; i <= nBalloons; i++) {
-        // 每个气球单独流程
-        let pumpCount = 0;
-        let exploded = false;
-        let explosionThreshold = Math.floor(Math.random() * maxPumpsPerBalloon) + 1;
+// 方块形状
+const pieces = [
+  [[1,1,1,1]], // I
+  [[2,2],[2,2]], // O
+  [[0,3,0],[3,3,3]], // T
+  [[0,4,4],[4,4,0]], // S
+  [[5,5,0],[0,5,5]], // Z
+  [[6,0,0],[6,6,6]], // J
+  [[0,0,7],[7,7,7]]  // L
+];
 
-        let balloonTrial = {
-            type: 'html-keyboard-response',
-            stimulus: () => {
-                return `<p>Balloon ${i}</p >
-                        <p>Pumps: ${pumpCount}</p >
-                        <p>Total Earned: ${totalEarned.toFixed(2)} €</p >
-                        <p>Press SPACE to pump, ENTER to bank</p >`;
-            },
-            choices: [' ', 'Enter'],
-            on_finish: (data) => {
-                if (data.key_press === 32) { // SPACE
-                    pumpCount++;
-                    if (pumpCount >= explosionThreshold) {
-                        exploded = true;
-                        alert(`Balloon exploded! You earned 0 €`);
-                        pumpCount = 0;
-                    } else {
-                        totalEarned += rewardPerPump;
-                    }
-                } else if (data.key_press === 13) { // ENTER
-                    totalEarned += rewardPerPump * pumpCount;
-                    pumpCount = 0;
-                }
+// 随机生成方块
+function randomPiece() {
+    const p = pieces[Math.floor(Math.random() * pieces.length)];
+    return {matrix:p, pos:{x:Math.floor(cols/2)-Math.floor(p[0].length/2), y:0}};
+}
+
+// 绘制矩阵
+function drawMatrix(matrix, offset) {
+    matrix.forEach((row, y) => {
+        row.forEach((value, x) => {
+            if(value !== 0) {
+                ctx.fillStyle = 'hsl(' + (value*50) + ',70%,50%)';
+                ctx.fillRect((x+offset.x)*scale, (y+offset.y)*scale, scale-1, scale-1);
             }
-        };
+        });
+    });
+}
 
-        timeline.push(balloonTrial);
+// 检测碰撞
+function collide(arena, player) {
+    const m = player.matrix;
+    const o = player.pos;
+    for(let y=0;y<m.length;y++){
+        for(let x=0;x<m[y].length;x++){
+            if(m[y][x] && (arena[y+o.y] && arena[y+o.y][x+o.x]) !== 0) return true;
+        }
     }
+    return false;
+}
 
-    // 完成实验
-    timeline.push({
-        type: 'html-button-response',
-        stimulus: () => `<p>Experiment finished!</p >
-                         <p>Total Earned: ${totalEarned.toFixed(2)} €</p >`,
-        choices: ['OK']
+// 合并方块到场地
+function merge(arena, player) {
+    player.matrix.forEach((row,y)=>{
+        row.forEach((value,x)=>{
+            if(value) arena[y+player.pos.y][x+player.pos.x] = value;
+        });
     });
+}
 
-    // 启动实验
-    jsPsych.init({
-        timeline: timeline
-    });
+// 场地清行
+function sweep() {
+    outer: for(let y=arena.length-1;y>=0;y--){
+        if(arena[y].every(val=>val!==0)){
+            arena.splice(y,1);
+            arena.unshift(new Array(cols).fill(0));
+            y++;
+        }
+    }
+}
+
+const arena = createMatrix(cols, rows);
+let player = randomPiece();
+let dropCounter = 0;
+let dropInterval = 500;
+let lastTime = 0;
+
+function update(time=0){
+    const deltaTime = time - lastTime;
+    lastTime = time;
+    dropCounter += deltaTime;
+    if(dropCounter > dropInterval){
+        player.pos.y++;
+        if(collide(arena, player)){
+            player.pos.y--;
+            merge(arena, player);
+            sweep();
+            player = randomPiece();
+            if(collide(arena, player)) arena.forEach(row=>row.fill(0)); // Game over: 清空
+        }
+        dropCounter = 0;
+    }
+    draw();
+    requestAnimationFrame(update);
+}
+
+function draw(){
+    ctx.fillStyle = '#222';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    drawMatrix(arena, {x:0,y:0});
+    drawMatrix(player.matrix, player.pos);
+}
+
+document.addEventListener('keydown', event=>{
+    if(event.key === 'ArrowLeft'){
+        player.pos.x--;
+        if(collide(arena, player)) player.pos.x++;
+    }
+    else if(event.key === 'ArrowRight'){
+        player.pos.x++;
+        if(collide(arena, player)) player.pos.x--;
+    }
+    else if(event.key === 'ArrowDown'){
+        player.pos.y++;
+        if(collide(arena, player)) player.pos.y--;
+    }
+    else if(event.key === 'ArrowUp'){ // 旋转
+        const m = player.matrix;
+        for(let y=0;y<m.length;y++){
+            for(let x=0;x<y;x++){
+                [m[x][y], m[y][x]] = [m[y][x], m[x][y]];
+            }
+        }
+        m.forEach(row => row.reverse());
+        if(collide(arena, player)) {
+            for(let i=0;i<3;i++){ // 旋转回去
+                for(let y=0;y<m.length;y++){
+                    for(let x=0;x<y;x++){
+                        [m[x][y], m[y][x]] = [m[y][x], m[x][y]];
+                    }
+                }
+                m.forEach(row => row.reverse());
+            }
+        }
+    }
+});
+
+update();
 </script>
 </body>
 </html>
