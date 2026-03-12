@@ -2,40 +2,70 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Experiment</title>
-    <!-- CSS -->
-    <link href="dist/jspsych.css" rel="stylesheet">
-    <!-- jsPsych 核心库 -->
+    <title>BART Experiment</title>
+    <link rel="stylesheet" href="dist/jspsych.css">
     <script src="dist/jspsych.js"></script>
-    <!-- 需要的插件 -->
     <script src="dist/plugins/jspsych-html-button-response.js"></script>
+    <script src="dist/plugins/jspsych-html-keyboard-response.js"></script>
 </head>
 <body>
-    <h1 style="text-align:center; margin-top:50px;">Loading Experiment...</h1>
+<script>
+    // 初始化变量
+    let totalEarned = 0;
+    const maxPumpsPerBalloon = 12; // 每个气球最大可泵次数
+    const rewardPerPump = 0.5;
+    const nBalloons = 5; // 测试用5个气球
 
-    <script>
-        // 等待页面完全加载
-        window.addEventListener('load', function() {
-            // 测试 jsPsych 是否正常工作
-            var timeline = [];
+    // 创建 timeline
+    let timeline = [];
 
-            var welcome = {
-                type: 'html-button-response',
-                stimulus: '<p style="font-size:20px; text-align:center;">Welcome to the experiment!</p >',
-                choices: ['Start']
-            };
+    for (let i = 1; i <= nBalloons; i++) {
+        // 每个气球单独流程
+        let pumpCount = 0;
+        let exploded = false;
+        let explosionThreshold = Math.floor(Math.random() * maxPumpsPerBalloon) + 1;
 
-            timeline.push(welcome);
-
-            jsPsych.init({
-                timeline: timeline,
-                display_element: document.body,
-                on_finish: function() {
-                    // 即使没有实验，也可以显示数据
-                    jsPsych.data.displayData('json'); 
+        let balloonTrial = {
+            type: 'html-keyboard-response',
+            stimulus: () => {
+                return `<p>Balloon ${i}</p >
+                        <p>Pumps: ${pumpCount}</p >
+                        <p>Total Earned: ${totalEarned.toFixed(2)} €</p >
+                        <p>Press SPACE to pump, ENTER to bank</p >`;
+            },
+            choices: [' ', 'Enter'],
+            on_finish: (data) => {
+                if (data.key_press === 32) { // SPACE
+                    pumpCount++;
+                    if (pumpCount >= explosionThreshold) {
+                        exploded = true;
+                        alert(`Balloon exploded! You earned 0 €`);
+                        pumpCount = 0;
+                    } else {
+                        totalEarned += rewardPerPump;
+                    }
+                } else if (data.key_press === 13) { // ENTER
+                    totalEarned += rewardPerPump * pumpCount;
+                    pumpCount = 0;
                 }
-            });
-        });
-    </script>
+            }
+        };
+
+        timeline.push(balloonTrial);
+    }
+
+    // 完成实验
+    timeline.push({
+        type: 'html-button-response',
+        stimulus: () => `<p>Experiment finished!</p >
+                         <p>Total Earned: ${totalEarned.toFixed(2)} €</p >`,
+        choices: ['OK']
+    });
+
+    // 启动实验
+    jsPsych.init({
+        timeline: timeline
+    });
+</script>
 </body>
 </html>
