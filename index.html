@@ -1,5 +1,73 @@
-<html>
-  <body>
-    Hello
-  </body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Calculator Test</title>
+
+<style>
+body {
+  font-family: Arial;
+  text-align: center;
+  margin-top: 50px;
+}
+
+input {
+  width: 100px;
+  height: 30px;
+  font-size: 18px;
+  text-align: center;
+}
+
+button {
+  width: 50px;
+  height: 40px;
+  font-size: 18px;
+  margin: 5px;
+}
+
+#result {
+  font-size: 22px;
+  margin-top: 20px;
+}
+</style>
+
+</head>
+<body>
+
+<h1>Simple Calculator</h1>
+
+<input id="num1" type="number">
+<input id="num2" type="number">
+
+<br><br>
+
+<button onclick="calc('+')">+</button>
+<button onclick="calc('-')">-</button>
+<button onclick="calc('*')">*</button>
+<button onclick="calc('/')">/</button>
+
+<div id="result">Result: </div>
+
+<script>
+
+function calc(op) {
+
+  let a = Number(document.getElementById("num1").value);
+  let b = Number(document.getElementById("num2").value);
+
+  let r;
+
+  if (op === '+') r = a + b;
+  if (op === '-') r = a - b;
+  if (op === '*') r = a * b;
+  if (op === '/') r = a / b;
+
+  document.getElementById("result").textContent =
+    "Result: " + r;
+
+}
+
+</script>
+
+</body>
 </html>
