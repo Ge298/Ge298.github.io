@@ -1,5 +1,30 @@
-<html>
-  <body>
-    Hello experiment
-  </body>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Experiment</title>
+    <link href="dist/jspsych.css" rel="stylesheet">
+    <script src="dist/jspsych.js"></script>
+    <script src="dist/plugins/jspsych-html-button-response.js"></script>
+</head>
+<body>
+    <script>
+        // 实验逻辑写在这里
+        var timeline = [];
+
+        var welcome = {
+            type: 'html-button-response',
+            stimulus: '<p>Welcome to the experiment!</p >',
+            choices: ['Start']
+        };
+        timeline.push(welcome);
+
+        jsPsych.init({
+            timeline: timeline,
+            on_finish: function() {
+                jsPsych.data.displayData();
+            }
+        });
+    </script>
+</body>
 </html>
