@@ -34,8 +34,11 @@ input { text-align:center; font-size:16px; padding:5px; }
 button { padding:8px 20px; font-size:16px; margin-top:10px; }
 </style>
 </head>
-<body>
 
+<body>
+<!--注视点-->
+  <img id="fixation" src="https://github.com/Ge298/Ge298.github.io/blob/main/fixation.png"
+    style="display:none; position:absolute; top:50%; left:50%; transform: translate(-50%, -50%); width: 50px; height: 50px; z-index:10;">
 <!-- 步骤 1: 参与者编号 -->
 <div id="step1">
 <h2>请输入参与者编号</h2>
@@ -123,6 +126,15 @@ const tempIncrease = 5;
 const explodeRange = 32;
 
 // ---------------- 步骤控制 ----------------
+function showFixation(callback) {
+  const fixation = document.getElementById("fixation");
+  fixation.style.display = "block";
+
+  setTimeout(() => {
+    fixation.style.display = "none";
+    callback();
+  }, 1000); // 显示 1000ms
+}
 function nextStep1() {
 subID = document.getElementById("subID").value;
 if(!subID) { alert("请输入编号"); return; }
@@ -143,18 +155,22 @@ alert("您不同意参加实验，实验结束");
 
 // ---------------- 练习 ----------------
 function startPractice() {
-document.getElementById("step4").style.display = "none"
-document.getElementById("practice").style.display = "block"
-practiceTrial = 0;
-tempScore = 0;
-permScore = 0;
-balloonWidth = 100;
-balloonHeight = 180;
-balloonExploded = false;
-updateScore();
-updateTrialCounter();
-updateBalloonSize();
-document.addEventListener('keyup', practiceKeyHandler);
+  document.getElementById("step4").style.display = "none";
+  
+  // 显示注视点 1000ms，再显示气球
+  showFixation(() => {
+    document.getElementById("practice").style.display = "block";
+    practiceTrial = 0;
+    tempScore = 0;
+    permScore = 0;
+    balloonWidth = 100;
+    balloonHeight = 180;
+    balloonExploded = false;
+    updateScore();
+    updateTrialCounter();
+    updateBalloonSize();
+    document.addEventListener('keyup', practiceKeyHandler);
+  });
 }
 
 function practiceKeyHandler(event) {
@@ -219,18 +235,21 @@ document.getElementById("practice-end").style.display = "block"
 
 // ---------------- 正式实验 ----------------
 function startFormalExperiment() {
-document.getElementById("practice-end").style.display = "none"
-document.getElementById("formal").style.display = "block"
-formalTrial = 0;
-tempScoreFormal = 0;
-permScoreFormal = 0;
-balloonWidthFormal = 100;
-balloonHeightFormal = 180;
-balloonExplodedFormal = false;
-updateScoreFormal();
-updateTrialCounterFormal();
-updateBalloonSizeFormal();
-document.addEventListener('keyup', formalKeyHandler);
+  document.getElementById("practice-end").style.display = "none";
+
+  showFixation(() => {
+    document.getElementById("formal").style.display = "block";
+    formalTrial = 0;
+    tempScoreFormal = 0;
+    permScoreFormal = 0;
+    balloonWidthFormal = 100;
+    balloonHeightFormal = 180;
+    balloonExplodedFormal = false;
+    updateScoreFormal();
+    updateTrialCounterFormal();
+    updateBalloonSizeFormal();
+    document.addEventListener('keyup', formalKeyHandler);
+  });
 }
 
 function formalKeyHandler(event) {
