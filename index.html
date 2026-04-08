@@ -119,7 +119,8 @@ const formalTotal = 30;
 let tempScore = 0;
 let totalScore = 0;
 let pumpCount = 0;
-
+let balloonSize=1
+const pumpIncrease=0.02
 let trialStartTime = 0;
 let expStartTime = 0;
 
@@ -187,7 +188,7 @@ function nextTrial(){
 
   tempScore = 0;
   pumpCount = 0;
-
+balloonSize = 1
   updateUI();
 
   document.getElementById("balloon").style.display="none";
@@ -219,7 +220,10 @@ function keyHandler(e){
 
   // F
   if(e.key==="f"||e.key==="F"){
+balloonSize *= (1 + pumpIncrease);
 
+let balloon = document.getElementById("balloon");
+balloon.style.transform = `scale(${balloonSize})`;
     pumpCount++;
     tempScore+=5;
     updateUI();
@@ -274,7 +278,10 @@ function updateUI(){
 }
 
 function resetBalloon(){
-  document.getElementById("balloon").src="https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/balloon.png";
+  let balloon = document.getElementById("balloon");
+
+  balloon.src="https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/balloon.png";
+ balloon.style.transform = "scale(1)";
 }
 
 // ===== 结束 =====
