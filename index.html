@@ -25,36 +25,43 @@
     background-color: transparent;
   }
   #trial-counter { margin: 10px 0; font-weight: bold; }
+  input { text-align:center; font-size:16px; padding:5px; }
+  button { padding:8px 20px; font-size:16px; margin-top:10px; }
 </style>
 </head>
 <body>
 
+<!-- 步骤 1: 参与者编号 -->
 <div id="step1">
   <h2>请输入参与者编号</h2>
   <input type="text" id="subID">
+  <br>
   <button onclick="nextStep1()">下一步</button>
 </div>
 
+<!-- 步骤 2: 指导语 -->
 <div id="step2" style="display:none">
   <h2>指导语</h2>
-  <p>这里是指导语</p>
+  <p>这里是指导语内容</p>
   <button onclick="nextStep2()">下一步</button>
 </div>
 
+<!-- 步骤 3: 是否同意 -->
 <div id="step3" style="display:none">
   <h2>是否同意开展实验？</h2>
   <button onclick="agree()">是</button>
   <button onclick="disagree()">否</button>
 </div>
 
+<!-- 步骤 4: 开始练习 -->
 <div id="step4" style="display:none">
   <h2>谢谢您的参与，下面开始练习</h2>
   <button onclick="startPractice()">开始练习</button>
 </div>
 
-<!-- 练习 -->
+<!-- 练习实验 -->
 <div id="practice" style="display:none">
-  <div id="score">临时积分: <span id="tempScore">0</span></div> &nbsp;&nbsp; 永久积分: <span id="permScore">0</span></div>
+  <div id="score">临时积分: <span id="tempScore">0</span> &nbsp;&nbsp; 永久积分: <span id="permScore">0</span></div>
   <div id="trial-counter">练习：0/10</div>
   <div id="balloon-area">
     <img id="balloon" src="https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/balloon.png" alt="气球">
@@ -65,7 +72,17 @@
 <!-- 练习结束确认 -->
 <div id="practice-end" style="display:none">
   <h2>练习结束</h2>
-  <button onclick="confirmPractice()">确认</button>
+  <button onclick="startFormalExperiment()">确认开始正式实验</button>
+</div>
+
+<!-- 正式实验 -->
+<div id="formal" style="display:none">
+  <div id="score">临时积分: <span id="tempScoreFormal">0</span> &nbsp;&nbsp; 永久积分: <span id="permScoreFormal">0</span></div>
+  <div id="trial-counter-formal">正式实验：0/30</div>
+  <div id="balloon-area-formal">
+    <img id="balloonFormal" src="https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/balloon.png" alt="气球">
+  </div>
+  <p>按 F 充气，按 J 收集积分</p>
 </div>
 
 <script>
@@ -77,10 +94,20 @@ let balloonHeight = 180;
 let balloonExploded = false;
 let practiceTrial = 0;
 const practiceTotal = 10;
+
+let formalTrial = 0;
+const formalTotal = 30;
+let tempScoreFormal = 0;
+let permScoreFormal = 0;
+let balloonWidthFormal = 100;
+let balloonHeightFormal = 180;
+let balloonExplodedFormal = false;
+
 const pumpIncrease = 0.02;
 const tempIncrease = 5;
 const explodeRange = 32;
 
+// ---------------- 步骤控制 ----------------
 function nextStep1() {
   subID = document.getElementById("subID").value;
   if(!subID) { alert("请输入编号"); return; }
@@ -99,7 +126,7 @@ function disagree() {
   alert("您不同意参加实验，实验结束");
 }
 
-// ---------- 练习 ----------
+// ---------------- 练习 ----------------
 function startPractice() {
   document.getElementById("step4").style.display = "none";
   document.getElementById("practice").style.display = "block";
@@ -154,7 +181,7 @@ function practiceCashOut() {
 
 function resetBalloon() {
   balloonWidth = 100;
-  balloonHeight = 200;
+  balloonHeight = 180;
   balloonExploded = false;
   document.getElementById("balloon").src = "https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/balloon.png";
   updateBalloonSize();
@@ -173,13 +200,84 @@ function updateTrialCounter() {
   }
 }
 
+// ---------------- 正式实验 ----------------
+function startFormalExperiment() {
+  document.getElementById("practice-end").style.display = "none";
+  document.getElementById("formal").style.display = "block";
+  formalTrial = 0;
+  tempScoreFormal = 0;
+  permScoreFormal = 0;
+  balloonWidthFormal = 100;
+  balloonHeightFormal = 180;
+  balloonExplodedFormal = false;
+  updateScoreFormal();
+  updateTrialCounterFormal();
+  updateBalloonSizeFormal();
+  document.addEventListener('keyup', formalKeyHandler);
+}
+
+function formalKeyHandler(event) {
+  if(balloonExplodedFormal) return;
+  if(event.key === "f" || event.key === "F") formalPump();
+  else if(event.key === "j" || event.key === "J") formalCashOut();
+}
+
+function formalPump() {
+  let explodeCheck = Math.floor(Math.random() * explodeRange) + 1;
+  if(explodeCheck === 1) {
+    balloonExplodedFormal = true;
+    document.getElementById("balloonFormal").src = "https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/explode.png";
+    document.getElementById("balloonFormal").style.width = "150px";
+    document.getElementById("balloonFormal").style.height = "150px";
+    tempScoreFormal = 0;
+    updateScoreFormal();
+    formalTrial++;
+    updateTrialCounterFormal();
+    setTimeout(resetBalloonFormal, 1000);
+    return;
+  }
+  balloonWidthFormal *= (1 + pumpIncrease);
+  balloonHeightFormal *= (1 + pumpIncrease);
+  document.getElementById("balloonFormal").style.width = balloonWidthFormal + "px";
+  document.getElementById("balloonFormal").style.height = balloonHeightFormal + "px";
+  tempScoreFormal += tempIncrease;
+  updateScoreFormal();
+}
+
+function formalCashOut() {
+  permScoreFormal += tempScoreFormal;
+  tempScoreFormal = 0;
+  updateScoreFormal();
+  formalTrial++;
+  updateTrialCounterFormal();
+  resetBalloonFormal();
+}
+
+function resetBalloonFormal() {
+  balloonWidthFormal = 100;
+  balloonHeightFormal = 180;
+  balloonExplodedFormal = false;
+  document.getElementById("balloonFormal").src = "https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/balloon.png";
+  updateBalloonSizeFormal();
+}
+
+function updateScoreFormal() {
+  document.getElementById("tempScoreFormal").innerText = tempScoreFormal;
+  document.getElementById("permScoreFormal").innerText = permScoreFormal;
+}
+
+function updateTrialCounterFormal() {
+  document.getElementById("trial-counter-formal").innerText = `正式实验：${formalTrial}/${formalTotal}`;
+}
+
 function updateBalloonSize() {
   document.getElementById("balloon").style.width = balloonWidth + "px";
   document.getElementById("balloon").style.height = balloonHeight + "px";
 }
 
-function confirmPractice() {
-  alert("练习阶段完成，可以准备正式实验（暂未实现）");
+function updateBalloonSizeFormal() {
+  document.getElementById("balloonFormal").style.width = balloonWidthFormal + "px";
+  document.getElementById("balloonFormal").style.height = balloonHeightFormal + "px";
 }
 </script>
 
