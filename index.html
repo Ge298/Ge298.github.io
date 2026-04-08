@@ -1,156 +1,109 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Tetris Test</title>
+  <meta charset="UTF-8">
+  <title>BART Experiment</title>
 
-<style>
-body {
-  background: black;
-  color: white;
-  text-align: center;
-  font-family: Arial;
-}
-
-canvas {
-  background: #111;
-  margin-top: 20px;
-  border: 2px solid white;
-}
-</style>
+  <!-- jsPsych -->
+  <script src="https://unpkg.com/jspsych@7.3.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-button-response"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-survey-text"></script>
 
 </head>
-<body>
-
-<h1>Tetris Test</h1>
-<p>Use ← → ↓ ↑ keys</p >
-
-<canvas id="game" width="240" height="400"></canvas>
+<body></body>
 
 <script>
 
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
-
-const scale = 20;
-ctx.scale(scale, scale);
-
-const arena = createMatrix(12, 20);
-
-const player = {
-  pos: {x: 0, y: 0},
-  matrix: null
-};
-
-function createMatrix(w, h) {
-  const matrix = [];
-  while (h--) {
-    matrix.push(new Array(w).fill(0));
+const jsPsych = initJsPsych({
+  on_finish: function() {
+    jsPsych.data.get().localSave('csv','bart_data.csv');
   }
-  return matrix;
-}
-
-function createPiece() {
-  return [
-    [1,1,1],
-    [0,1,0]
-  ];
-}
-
-function drawMatrix(matrix, offset) {
-  matrix.forEach((row, y) => {
-    row.forEach((value, x) => {
-      if (value !== 0) {
-        ctx.fillStyle = "red";
-        ctx.fillRect(
-          x + offset.x,
-          y + offset.y,
-          1,
-          1
-        );
-      }
-    });
-  });
-}
-
-function draw() {
-  ctx.fillStyle = "#000";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  drawMatrix(arena, {x:0, y:0});
-  drawMatrix(player.matrix, player.pos);
-}
-
-function update() {
-  player.pos.y++;
-
-  if (collide()) {
-    player.pos.y--;
-    merge();
-    playerReset();
-  }
-
-  draw();
-}
-
-function collide() {
-  const m = player.matrix;
-  const o = player.pos;
-
-  for (let y = 0; y < m.length; y++) {
-    for (let x = 0; x < m[y].length; x++) {
-
-      if (
-        m[y][x] !== 0 &&
-        (arena[y + o.y] &&
-         arena[y + o.y][x + o.x]) !== 0
-      ) {
-        return true;
-      }
-
-    }
-  }
-
-  return false;
-}
-
-function merge() {
-  player.matrix.forEach((row, y) => {
-    row.forEach((value, x) => {
-      if (value !== 0) {
-        arena[y + player.pos.y][x + player.pos.x] = value;
-      }
-    });
-  });
-}
-
-function playerReset() {
-  player.matrix = createPiece();
-  player.pos.y = 0;
-  player.pos.x = 5;
-}
-
-document.addEventListener("keydown", e => {
-
-  if (e.key === "ArrowLeft") {
-    player.pos.x--;
-  }
-
-  if (e.key === "ArrowRight") {
-    player.pos.x++;
-  }
-
-  if (e.key === "ArrowDown") {
-    update();
-  }
-
 });
 
-playerReset();
+// ===== 人口学 =====
+const demo = {
+  type: jsPsychSurveyText,
+  questions: [
+    {prompt: "你的年龄？", required: true},
+    {prompt: "你的性别？", required: true}
+  ]
+};
 
-setInterval(update, 500);
+// ===== 指导语 =====
+const intro = {
+  type: jsPsychHtmlButtonResponse,
+  stimulus: "<p>你将进行气球任务。点击“充气”增加收益，但可能爆炸。</p>",
+  choices: ["开始"]
+};
+
+// ===== BART函数 =====
+function create_bart_trial() {
+
+  let pumps = 0;
+  let reward = 0;
+  let explosion_point = Math.floor(Math.random()*64)+1;
+  let finished = false;
+
+  return {
+    timeline: [
+      {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: function() {
+          return `<p>充气次数: ${pumps}</p><p>奖励: ${reward}</p>`;
+        },
+        choices: ["充气", "收集"],
+        loop_function: function(data){
+
+          let last = data.values()[0];
+
+          if(last.response == 0){
+            pumps++;
+            reward++;
+
+            if(pumps >= explosion_point){
+              finished = true;
+              reward = 0;
+              return false;
+            }
+            return true;
+
+          } else {
+            finished = true;
+            return false;
+          }
+        }
+      },
+      {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: function(){
+          return reward == 0
+            ? "<p>爆炸了！</p>"
+            : `<p>你获得 ${reward}</p>`;
+        },
+        choices: ["继续"],
+        data: {
+          pumps: pumps,
+          reward: reward,
+          explosion_point: explosion_point
+        }
+      }
+    ]
+  };
+}
+
+// ===== timeline =====
+let timeline = [];
+
+timeline.push(demo);
+timeline.push(intro);
+
+// 30个气球
+for(let i=0;i<30;i++){
+  timeline.push(create_bart_trial());
+}
+
+// ===== 运行 =====
+jsPsych.run(timeline);
 
 </script>
-
-</body>
 </html>
