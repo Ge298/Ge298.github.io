@@ -303,8 +303,14 @@ function checkFormalEnd() {
 }
 
 // ---------------- 注视点（文字版 +） ----------------
-function showFixation(callback, areaId){
+function showFixation(callback, areaId, balloonId){
     const area = document.getElementById(areaId);
+    const balloon = document.getElementById(balloonId);
+    
+    // 隐藏气球
+    balloon.style.visibility = "hidden";
+
+    // 创建注视点
     const fixation = document.createElement("div");
     fixation.innerText = "+";
     fixation.style.fontSize = "48px";
@@ -316,8 +322,10 @@ function showFixation(callback, areaId){
     fixation.style.zIndex = "10";
     area.appendChild(fixation);
 
+    // 延时后显示气球并执行回调
     setTimeout(() => {
         fixation.remove();
+        balloon.style.visibility = "visible";
         callback();
     }, fixationDuration);
 }
