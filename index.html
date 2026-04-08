@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -102,33 +101,76 @@ button { padding:8px 20px; font-size:16px; margin-top:10px; }
 </div>
 
 <script>
-// ----- 新增统计数组 -----
-let practiceData = [];
-let formalData = [];
+let subID = ""
+let tempScore = 0;
+let permScore = 0;
+let balloonWidth = 100;
+let balloonHeight = 180;
+let balloonExploded = false;
+let practiceTrial = 0;
+const practiceTotal = 10;
 
-// ----- 练习实验记录 -----
+let formalTrial = 0;
+const formalTotal = 30;
+let tempScoreFormal = 0;
+let permScoreFormal = 0;
+let balloonWidthFormal = 100;
+let balloonHeightFormal = 180;
+let balloonExplodedFormal = false;
+
+const pumpIncrease = 0.02;
+const tempIncrease = 5;
+const explodeRange = 32;
+
+// ---------------- 步骤控制 ----------------
+function nextStep1() {
+subID = document.getElementById("subID").value;
+if(!subID) { alert("请输入编号"); return; }
+document.getElementById("step1").style.display = "none"
+document.getElementById("step2").style.display = "block"
+}
+function nextStep2() {
+document.getElementById("step2").style.display = "none"
+document.getElementById("step3").style.display = "block"
+}
+function agree() {
+document.getElementById("step3").style.display = "none"
+document.getElementById("step4").style.display = "block"
+}
+function disagree() {
+alert("您不同意参加实验，实验结束");
+}
+
+// ---------------- 练习 ----------------
+function startPractice() {
+document.getElementById("step4").style.display = "none"
+document.getElementById("practice").style.display = "block"
+practiceTrial = 0;
+tempScore = 0;
+permScore = 0;
+balloonWidth = 100;
+balloonHeight = 180;
+balloonExploded = false;
+updateScore();
+updateTrialCounter();
+updateBalloonSize();
+document.addEventListener('keyup', practiceKeyHandler);
+}
+
+function practiceKeyHandler(event) {
+if(balloonExploded) return;
+if(event.key === "f" || event.key === "F") practicePump();
+else if(event.key === "j" || event.key === "J") practiceCashOut();
+}
+
 function practicePump() {
 if(practiceTrial >= practiceTotal) return;
-
-let pumpCount = balloonWidth / 100; // 临时计算充气次数（可用其他方式）
-let tempBefore = tempScore;
-
 let explodeCheck = Math.floor(Math.random() * explodeRange) + 1;
 if(explodeCheck === 1) {
 balloonExploded = true;
 document.getElementById("balloon").src = "https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/explode.png"
 document.getElementById("balloon").style.width = "150px"
 document.getElementById("balloon").style.height = "150px"
-
-// 记录数据
-practiceData.push({
-trialNumber: practiceTrial + 1,
-pumpCount: Math.round(tempBefore / tempIncrease),
-exploded: 1,
-tempScoreBefore: tempBefore,
-permScoreAfter: permScore
-});
-
 tempScore = 0;
 updateScore();
 practiceTrial++;
@@ -136,7 +178,6 @@ updateTrialCounter();
 setTimeout(resetBalloon, 1000);
 return;
 }
-
 balloonWidth *= (1 + pumpIncrease);
 balloonHeight *= (1 + pumpIncrease);
 document.getElementById("balloon").style.width = balloonWidth + "px"
@@ -147,16 +188,6 @@ updateScore();
 
 function practiceCashOut() {
 if(practiceTrial >= practiceTotal) return;
-
-// 记录数据
-practiceData.push({
-trialNumber: practiceTrial + 1,
-pumpCount: Math.round(tempScore / tempIncrease),
-exploded: 0,
-tempScoreBefore: tempScore,
-permScoreAfter: permScore + tempScore
-});
-
 permScore += tempScore;
 tempScore = 0;
 updateScore();
@@ -165,27 +196,57 @@ updateTrialCounter();
 resetBalloon();
 }
 
-// ----- 正式实验记录 -----
+function resetBalloon() {
+balloonWidth = 100;
+balloonHeight = 180;
+balloonExploded = false;
+document.getElementById("balloon").src = "https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/balloon.png"
+updateBalloonSize();
+}
+
+function updateScore() {
+document.getElementById("tempScore").innerText = tempScore;
+document.getElementById("permScore").innerText = permScore;
+}
+
+function updateTrialCounter() {
+document.getElementById("trial-counter").innerText = `练习：${practiceTrial}/${practiceTotal}`;
+if(practiceTrial >= practiceTotal) {
+document.getElementById("practice").style.display = "none"
+document.getElementById("practice-end").style.display = "block"
+}
+}
+
+// ---------------- 正式实验 ----------------
+function startFormalExperiment() {
+document.getElementById("practice-end").style.display = "none"
+document.getElementById("formal").style.display = "block"
+formalTrial = 0;
+tempScoreFormal = 0;
+permScoreFormal = 0;
+balloonWidthFormal = 100;
+balloonHeightFormal = 180;
+balloonExplodedFormal = false;
+updateScoreFormal();
+updateTrialCounterFormal();
+updateBalloonSizeFormal();
+document.addEventListener('keyup', formalKeyHandler);
+}
+
+function formalKeyHandler(event) {
+if(balloonExplodedFormal) return;
+if(event.key === "f" || event.key === "F") formalPump();
+else if(event.key === "j" || event.key === "J") formalCashOut();
+}
+
 function formalPump() {
 if(formalTrial >= formalTotal) return;
-
-let tempBefore = tempScoreFormal;
-
 let explodeCheck = Math.floor(Math.random() * explodeRange) + 1;
 if(explodeCheck === 1) {
 balloonExplodedFormal = true;
 document.getElementById("balloonFormal").src = "https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/explode.png"
 document.getElementById("balloonFormal").style.width = "150px"
 document.getElementById("balloonFormal").style.height = "150px"
-
-formalData.push({
-trialNumber: formalTrial + 1,
-pumpCount: Math.round(tempBefore / tempIncrease),
-exploded: 1,
-tempScoreBefore: tempBefore,
-permScoreAfter: permScoreFormal
-});
-
 tempScoreFormal = 0;
 updateScoreFormal();
 formalTrial++;
@@ -194,7 +255,6 @@ setTimeout(resetBalloonFormal, 1000);
 checkFormalEnd();
 return;
 }
-
 balloonWidthFormal *= (1 + pumpIncrease);
 balloonHeightFormal *= (1 + pumpIncrease);
 document.getElementById("balloonFormal").style.width = balloonWidthFormal + "px"
@@ -205,15 +265,6 @@ updateScoreFormal();
 
 function formalCashOut() {
 if(formalTrial >= formalTotal) return;
-
-formalData.push({
-trialNumber: formalTrial + 1,
-pumpCount: Math.round(tempScoreFormal / tempIncrease),
-exploded: 0,
-tempScoreBefore: tempScoreFormal,
-permScoreAfter: permScoreFormal + tempScoreFormal
-});
-
 permScoreFormal += tempScoreFormal;
 tempScoreFormal = 0;
 updateScoreFormal();
@@ -223,52 +274,38 @@ resetBalloonFormal();
 checkFormalEnd();
 }
 
-// ----- 实验结束后导出 -----
-function exportCSV(filename, rows) {
-if(!rows || !rows.length) return;
-const keys = Object.keys(rows[0]);
-let csv = keys.join(",") + "\n"
-rows.forEach(row => {
-csv += keys.map(k => row[k]).join(",") + "\n"
-});
-const blob = new Blob([csv], {type: 'text/csv'});
-const url = URL.createObjectURL(blob);
-const a = document.createElement("a");
-a.href = url;
-a.download = filename;
-a.click();
-URL.revokeObjectURL(url);
+function resetBalloonFormal() {
+balloonWidthFormal = 100;
+balloonHeightFormal = 180;
+balloonExplodedFormal = false;
+document.getElementById("balloonFormal").src = "https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/balloon.png"
+updateBalloonSizeFormal();
 }
 
-// 在正式实验结束时显示总结和导出
+function updateScoreFormal() {
+document.getElementById("tempScoreFormal").innerText = tempScoreFormal;
+document.getElementById("permScoreFormal").innerText = permScoreFormal;
+}
+
+function updateTrialCounterFormal() {
+document.getElementById("trial-counter-formal").innerText = `正式实验：${formalTrial}/${formalTotal}`;
+}
+
+function updateBalloonSize() {
+document.getElementById("balloon").style.width = balloonWidth + "px"
+document.getElementById("balloon").style.height = balloonHeight + "px"
+}
+
+function updateBalloonSizeFormal() {
+document.getElementById("balloonFormal").style.width = balloonWidthFormal + "px"
+document.getElementById("balloonFormal").style.height = balloonHeightFormal + "px"
+}
+
 function checkFormalEnd() {
 if(formalTrial >= formalTotal){
 document.getElementById("formal").style.display = "none"
 document.getElementById("formal-end").style.display = "block"
-
-// 总积分
-const totalScore = permScoreFormal;
-// 爆炸气球百分比
-const explodedCount = formalData.filter(d => d.exploded===1).length;
-const explodedPercent = ((explodedCount / formalData.length) * 100).toFixed(2);
-
-const summaryDiv = document.getElementById("formal-end");
-const summaryHTML = `<p>总积分: ${totalScore}</p>
-<p>爆炸气球比例: ${explodedPercent}%</p>
-<button onclick="downloadAllData()">下载数据</button>`;
-summaryDiv.innerHTML += summaryHTML;
 }
-}
-
-// 下载练习和正式数据
-function downloadAllData() {
-const participantID = subID;
-// 为每行加上参与者编号
-const practiceRows = practiceData.map(d => ({participantID, ...d}));
-const formalRows = formalData.map(d => ({participantID, ...d}));
-
-exportCSV("practice.csv", practiceRows);
-exportCSV("formal.csv", formalRows);
 }
 </script>
 
