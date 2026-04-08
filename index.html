@@ -169,13 +169,13 @@ let explodeCheck = Math.floor(Math.random() * explodeRange) + 1;
 if(explodeCheck === 1) {
 balloonExploded = true;
 document.getElementById("balloon").src = "https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/explode.png"
-document.getElementById("balloon").style.width = "150px"
+document.getElementById("balloon").style.width = "210px"
 document.getElementById("balloon").style.height = "150px"
 tempScore = 0;
 updateScore();
 practiceTrial++;
 updateTrialCounter();
-setTimeout(resetBalloon, 1000);
+setTimeout(resetBalloon, 1500);
 return;
 }
 balloonWidth *= (1 + pumpIncrease);
