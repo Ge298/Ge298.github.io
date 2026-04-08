@@ -2,12 +2,12 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>BART 实验 - 练习版</title>
+<title>BART 实验</title>
 <style>
   body { font-family: Arial, sans-serif; text-align: center; }
   #balloon-area {
-    width: 300px;
-    height: 300px;
+    width: 500px;
+    height: 500px;
     margin: 20px auto;
     display: flex;
     align-items: center;
@@ -22,6 +22,7 @@
     display: flex;
     justify-content: space-between;
     margin: 10px 0;
+    background-color: transparent;
   }
   #trial-counter { margin: 10px 0; font-weight: bold; }
 </style>
@@ -53,10 +54,7 @@
 
 <!-- 练习 -->
 <div id="practice" style="display:none">
-  <div id="score">
-    <div>临时积分: <span id="tempScore">0</span></div>
-    <div>永久积分: <span id="permScore">0</span></div>
-  </div>
+  <div id="score">临时积分: <span id="tempScore">0</span></div> &nbsp;&nbsp; 永久积分: <span id="permScore">0</span></div>
   <div id="trial-counter">练习：0/10</div>
   <div id="balloon-area">
     <img id="balloon" src="https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/balloon.png" alt="气球">
