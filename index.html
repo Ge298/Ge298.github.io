@@ -86,145 +86,272 @@ button { padding:8px 20px; font-size:16px; margin-top:10px; }
 <!-- 实验结束显示 -->
 <div id="experiment-end" style="display:none">
 <h2>实验结束</h2>
+  <p id="finalScore"></p>        
+  <button id="downloadCSV">下载指标数据</button>
+  <br><br>
+<button id="downloadTimeCSV">下载时间数据</button>
 </div>
 
 <script>
-// ---------------- 全局参数 ----------------
+// ================= 基本变量 =================
 let subID = "";
+
+let phase = "practice"; // practice / formal
+let trialIndex = 0;
+let trialTotal = 10;
+
+let tempScore = 0;
+let totalScore = 0;
+
+let pumpCount = 0;
+let balloonExploded = false;
+
+let trialStartTime = 0;
+
+// 数据
+let trialData = [];
+let keyData = [];
+
+// 实验时间
+let experimentStartTime = 0;
+let experimentEndTime = 0;
+
+// 参数
+const practiceTotal = 10;
+const formalTotal = 30;
 const pumpIncrease = 0.02;
 const tempIncrease = 5;
 const explodeRange = 32;
 
-// ---------------- 状态变量 ----------------
-let currentMode = ""; // 'practice' 或 'formal'
-let totalTrials = 0;
-let currentTrial = 0;
-let tempScore = 0;
-let permScore = 0;
-let balloonWidth = 100;
-let balloonHeight = 180;
-let balloonExploded = false;
-
-// ---------------- 步骤控制 ----------------
-function nextStep1() {
-  subID = document.getElementById("subID").value;
-  if(!subID) { alert("请输入编号"); return; }
-  document.getElementById("step1").style.display = "none";
-  document.getElementById("step2").style.display = "block";
-}
-function nextStep2() {
-  document.getElementById("step2").style.display = "none";
-  document.getElementById("step3").style.display = "block";
-}
-function agree() {
-  document.getElementById("step3").style.display = "none";
-  document.getElementById("step4").style.display = "block";
-}
-function disagree() { alert("您不同意参加实验，实验结束"); }
-
-// ---------------- 实验流程 ----------------
-function startExperiment(mode){
-  currentMode = mode;
-  document.getElementById("step4").style.display = "none";
-  document.getElementById("experiment").style.display = "block";
-
-  // 根据模式设置总试次
-  totalTrials = mode === 'practice' ? 10 : 30;
-  currentTrial = 0;
-  tempScore = 0;
-  permScore = 0;
-  updateScore();
-  updateTrialCounter();
-  nextTrial();
+// ================= 步骤控制 =================
+function nextStep1(){
+    subID = document.getElementById("subID").value;
+    if(!subID){ alert("请输入编号"); return; }
+    document.getElementById("step1").style.display="none";
+    document.getElementById("step2").style.display="block";
 }
 
-// 显示十字 -> 气球 -> 操作/结果
+function nextStep2(){
+    document.getElementById("step2").style.display="none";
+    document.getElementById("step3").style.display="block";
+}
+
+function agree(){
+    document.getElementById("step3").style.display="none";
+    document.getElementById("step4").style.display="block";
+}
+
+function disagree(){
+    alert("实验结束");
+}
+
+// ================= 开始实验 =================
+function startPractice(){
+    experimentStartTime = Date.now();
+
+    phase = "practice";
+    trialTotal = practiceTotal;
+    trialIndex = 0;
+    totalScore = 0;
+
+    document.getElementById("step4").style.display="none";
+    document.getElementById("practice").style.display="block";
+
+    nextTrial();
+}
+
+// ================= 核心试次引擎 =================
 function nextTrial(){
-  if(currentTrial >= totalTrials){
-    document.getElementById("experiment").style.display = "none";
-    document.getElementById("experiment-end").style.display = "block";
-    return;
-  }
 
-  const fix = document.getElementById("fixation");
-  const balloon = document.getElementById("balloon");
+    // ===== 阶段切换 =====
+    if(trialIndex >= trialTotal){
 
-  // 显示十字
-  fix.style.display = "block";
-  balloon.style.display = "none";
-  balloonWidth = 100;
-  balloonHeight = 180;
-  balloonExploded = false;
-  balloon.src = "https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/balloon.png";
-  updateBalloonSize();
+        if(phase === "practice"){
+            // 进入正式实验
+            phase = "formal";
+            trialTotal = formalTotal;
+            trialIndex = 0;
 
-  setTimeout(()=>{
-    // 十字消失，显示气球
-    fix.style.display = "none";
-    balloon.style.display = "block";
-  }, 1000);
-}
+            document.getElementById("practice").style.display="none";
+            document.getElementById("formal").style.display="block";
 
-// ---------------- 按键事件 ----------------
-document.addEventListener('keyup', keyHandler);
+            nextTrial();
+            return;
+        }
 
-function keyHandler(event){
-  const balloon = document.getElementById("balloon");
-  if(balloon.style.display === "none") return; // 十字或爆炸不响应
-  if(balloonExploded) return;
+        if(phase === "formal"){
+            endExperiment();
+            return;
+        }
+    }
 
-  if(event.key === "f" || event.key === "F") pumpBalloon();
-  else if(event.key === "j" || event.key === "J") cashOutBalloon();
-}
-
-function pumpBalloon(){
-  const balloon = document.getElementById("balloon");
-  let explodeCheck = Math.floor(Math.random()*explodeRange)+1;
-  if(explodeCheck === 1){
-    balloonExploded = true;
-    balloon.src="https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/explode.png";
-    balloon.style.width="150px";
-    balloon.style.height="150px";
+    // ===== 初始化试次 =====
     tempScore = 0;
-    updateScore();
+    pumpCount = 0;
+    balloonExploded = false;
+
+    let balloon = (phase==="practice") ?
+        document.getElementById("balloon") :
+        document.getElementById("balloonFormal");
+
+    let fixation = (phase==="practice") ?
+        document.getElementById("fixation") :
+        document.getElementById("fixationFormal");
+
+    balloon.style.display = "none";
+    fixation.style.display = "block";
+
+    // ===== 十字 1000ms =====
     setTimeout(()=>{
-      currentTrial++;
-      updateTrialCounter();
-      nextTrial();
-    },1500);
-  } else {
-    balloonWidth *= (1+pumpIncrease);
-    balloonHeight *= (1+pumpIncrease);
-    balloon.style.width = balloonWidth+"px";
-    balloon.style.height = balloonHeight+"px";
-    tempScore += tempIncrease;
-    updateScore();
-  }
+
+        fixation.style.display = "none";
+        balloon.style.display = "block";
+
+        trialStartTime = performance.now();
+
+        document.addEventListener("keydown", keyHandler);
+
+    },1000);
 }
 
-function cashOutBalloon(){
-  permScore += tempScore;
-  tempScore = 0;
-  updateScore();
-  currentTrial++;
-  updateTrialCounter();
-  nextTrial();
+// ================= 按键逻辑 =================
+function keyHandler(e){
+
+    if(e.key!=="f" && e.key!=="F" && e.key!=="j" && e.key!=="J") return;
+
+    let currentTime = performance.now();
+    let rt = currentTime - trialStartTime;
+
+    let balloon = (phase==="practice") ?
+        document.getElementById("balloon") :
+        document.getElementById("balloonFormal");
+
+    // ===== 记录每一次按键（时间CSV）=====
+    keyData.push({
+        subID,
+        phase,
+        trial: trialIndex+1,
+        key: e.key.toUpperCase(),
+        reactionTime: rt.toFixed(2),
+        timestamp: Date.now()
+    });
+
+    // ===== F：充气 =====
+    if(e.key==="f" || e.key==="F"){
+
+        pumpCount++;
+        tempScore += tempIncrease;
+
+        // 爆炸判断
+        if(Math.floor(Math.random()*explodeRange)+1 === 1){
+
+            balloonExploded = true;
+
+            balloon.src = "https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/explode.png";
+            balloon.style.width="150px";
+
+            tempScore = 0;
+
+            saveTrial(rt,true);
+
+            document.removeEventListener("keydown", keyHandler);
+
+            setTimeout(()=>{
+                resetBalloon(balloon);
+                trialIndex++;
+                nextTrial();
+            },1500);
+
+            return;
+        }
+    }
+
+    // ===== J：收集 =====
+    if(e.key==="j" || e.key==="J"){
+
+        totalScore += tempScore;
+
+        saveTrial(rt,false);
+
+        document.removeEventListener("keydown", keyHandler);
+
+        resetBalloon(balloon);
+
+        trialIndex++;
+        nextTrial();
+    }
 }
 
-// ---------------- UI 更新 ----------------
-function updateScore(){
-  document.getElementById("tempScore").innerText = tempScore;
-  document.getElementById("permScore").innerText = permScore;
+// ================= 保存试次 =================
+function saveTrial(rt, exploded){
+
+    trialData.push({
+        subID,
+        phase,
+        trial: trialIndex+1,
+        pumpCount,
+        exploded: exploded?1:0,
+        totalScore,
+        reactionTime: rt.toFixed(2)
+    });
 }
 
-function updateTrialCounter(){
-  document.getElementById("trial-counter").innerText = `${currentMode==='practice'?'练习':'正式实验'}：${currentTrial}/${totalTrials}`;
+// ================= 重置气球 =================
+function resetBalloon(balloon){
+    balloon.src = "https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/balloon.png";
+    balloon.style.width="100px";
 }
 
-function updateBalloonSize(){
-  const balloon = document.getElementById("balloon");
-  balloon.style.width = balloonWidth+"px";
-  balloon.style.height = balloonHeight+"px";
+// ================= 结束实验 =================
+function endExperiment(){
+
+    experimentEndTime = Date.now();
+    let totalTime = experimentEndTime - experimentStartTime;
+
+    document.getElementById("formal").style.display="none";
+    document.getElementById("formal-end").style.display="block";
+
+    document.getElementById("finalScore").innerText =
+        `总积分：${totalScore} ｜ 总时长：${(totalTime/1000).toFixed(2)} 秒`;
+
+    generateTrialCSV(totalTime);
+    generateTimeCSV(totalTime);
+}
+
+// ================= CSV 1：指标 =================
+function generateTrialCSV(totalTime){
+
+    let csv = "data:text/csv;charset=utf-8,";
+    csv += "subID,phase,trial,pumpCount,exploded,totalScore,reactionTime,totalTime(ms)\n";
+
+    trialData.forEach(r=>{
+        csv += `${r.subID},${r.phase},${r.trial},${r.pumpCount},${r.exploded},${r.totalScore},${r.reactionTime},${totalTime}\n`;
+    });
+
+    let link = document.getElementById("downloadCSV");
+    link.href = encodeURI(csv);
+    link.download = `BART_trial_${subID}.csv`;
+}
+
+// ================= CSV 2：时间 =================
+function generateTimeCSV(totalTime){
+
+    let csv = "data:text/csv;charset=utf-8,";
+    csv += "subID,phase,trial,key,reactionTime(ms),timestamp\n";
+
+    keyData.forEach(r=>{
+        csv += `${r.subID},${r.phase},${r.trial},${r.key},${r.reactionTime},${r.timestamp}\n`;
+    });
+
+    csv += `\nTotalTime(ms),${totalTime}`;
+
+    let btn = document.getElementById("downloadTimeCSV");
+    btn.onclick = ()=>{
+        let link = document.createElement("a");
+        link.href = encodeURI(csv);
+        link.download = `BART_time_${subID}.csv`;
+        link.click();
+    };
 }
 </script>
 </body>
