@@ -9,7 +9,6 @@
     width: 300px;
     height: 300px;
     margin: 20px auto;
-    background-color: #ccc;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -17,7 +16,7 @@
   }
   #balloon {
     width: 100px;
-    height: 200px;
+    height: 180px;
   }
   #score {
     display: flex;
@@ -30,7 +29,7 @@
 <body>
 
 <div id="step1">
-  <h2>请输入被试编号</h2>
+  <h2>请输入参与者编号</h2>
   <input type="text" id="subID">
   <button onclick="nextStep1()">下一步</button>
 </div>
@@ -76,13 +75,13 @@ let subID = "";
 let tempScore = 0;
 let permScore = 0;
 let balloonWidth = 100;
-let balloonHeight = 200;
+let balloonHeight = 180;
 let balloonExploded = false;
 let practiceTrial = 0;
 const practiceTotal = 10;
-const pumpIncrease = 0.05;
+const pumpIncrease = 0.02;
 const tempIncrease = 5;
-const explodeRange = 30;
+const explodeRange = 32;
 
 function nextStep1() {
   subID = document.getElementById("subID").value;
@@ -110,7 +109,7 @@ function startPractice() {
   tempScore = 0;
   permScore = 0;
   balloonWidth = 100;
-  balloonHeight = 200;
+  balloonHeight = 180;
   balloonExploded = false;
   updateScore();
   updateTrialCounter();
