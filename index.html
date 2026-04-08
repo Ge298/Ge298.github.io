@@ -6,7 +6,7 @@
 <style>
   body { font-family: Arial, sans-serif; text-align: center; }
   #balloon-area {
-    width: 300px; /* 气球放大区正方形尺寸，可修改 */
+    width: 300px;
     height: 300px;
     margin: 20px auto;
     background-color: #ccc;
@@ -16,13 +16,17 @@
     position: relative;
   }
   #balloon {
-    width: 100px; /* 初始气球宽度，可修改 */
-    height: 200px; /* 初始气球高度，可修改 */
+    width: 100px;
+    height: 200px;
   }
   #score {
     display: flex;
     justify-content: space-between;
     margin: 10px 0;
+  }
+  #trial-counter {
+    margin: 10px 0;
+    font-weight: bold;
   }
 </style>
 </head>
@@ -48,30 +52,60 @@
 
 <div id="step4" style="display:none">
   <h2>谢谢您的参与，下面开始实验</h2>
-  <button onclick="startExperiment()">开始实验</button>
+  <button onclick="startPractice()">开始实验</button>
 </div>
 
-<div id="experiment" style="display:none">
+<div id="practice" style="display:none">
   <div id="score">
     <div>临时积分: <span id="tempScore">0</span></div>
     <div>永久积分: <span id="permScore">0</span></div>
   </div>
+  <div id="trial-counter">练习：0/10</div>
   <div id="balloon-area">
     <img id="balloon" src="https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/balloon.png" alt="气球">
   </div>
   <p>按 F 充气，按 J 收集积分</p>
 </div>
 
+<div id="experiment-real" style="display:none">
+  <div id="score-real">
+    <div>临时积分: <span id="tempScoreReal">0</span></div>
+    <div>永久积分: <span id="permScoreReal">0</span></div>
+  </div>
+  <div id="trial-counter-real">正式实验：0/30</div>
+  <div id="balloon-area-real">
+    <img id="balloonReal" src="https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/balloon.png" alt="气球">
+  </div>
+  <p>按 F 充气，按 J 收集积分</p>
+</div>
+
+<div id="start-experiment-page" style="display:none">
+  <h2>正式实验</h2>
+  <button onclick="startExperimentReal()">确认</button>
+</div>
+
 <script>
 let subID = "";
+// 练习相关
 let tempScore = 0;
 let permScore = 0;
-let balloonWidth = 100; // 初始气球宽度，可修改
-let balloonHeight = 200; // 初始气球高度，可修改
-let pumpIncrease = 0.05; // 每次放大百分比，可修改
-let tempIncrease = 5; // 每次 pump 临时积分，可修改
-let explodeRange = 30; // 随机爆炸范围，可修改
-let balloonExploded = false; // 标记是否爆炸
+let balloonWidth = 100;
+let balloonHeight = 200;
+let pumpIncrease = 0.05;
+let tempIncrease = 5;
+let explodeRange = 30;
+let balloonExploded = false;
+let practiceTrial = 0;
+const practiceTotal = 10;
+
+// 正式实验相关
+let tempScoreReal = 0;
+let permScoreReal = 0;
+let balloonWidthReal = 100;
+let balloonHeightReal = 200;
+let balloonExplodedReal = false;
+let experimentTrial = 0;
+const experimentTotal = 30;
 
 function nextStep1() {
   subID = document.getElementById("subID").value;
@@ -94,59 +128,55 @@ function disagree() {
   alert("您不同意参加实验，实验结束");
 }
 
-function startExperiment() {
+// ------------------练习------------------
+function startPractice() {
   document.getElementById("step4").style.display = "none";
-  document.getElementById("experiment").style.display = "block";
-  document.addEventListener('keyup', keyHandler); // 改为 keyup，防止长按
+  document.getElementById("practice").style.display = "block";
+  practiceTrial = 0;
+  updateTrialCounter();
+  document.addEventListener('keyup', practiceKeyHandler);
   updateBalloonSize();
 }
 
-function keyHandler(event) {
-  if(balloonExploded) return; // 爆炸后暂不响应按键
+function practiceKeyHandler(event) {
+  if(balloonExploded) return;
   if(event.key === "f" || event.key === "F") {
-    pump();
+    practicePump();
   } else if(event.key === "j" || event.key === "J") {
-    cashOut();
+    practiceCashOut();
   }
 }
 
-function pump() {
-  // 随机爆炸判定
+function practicePump() {
   let explodeCheck = Math.floor(Math.random() * explodeRange) + 1;
   if(explodeCheck === 1) {
     balloonExploded = true;
-    // 替换为固定大小爆炸图片
     let balloonImg = document.getElementById("balloon");
     balloonImg.src = "https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/explode.png";
-    balloonImg.style.width = "150px"; // 固定宽度
-    balloonImg.style.height = "150px"; // 固定高度
+    balloonImg.style.width = "150px";
+    balloonImg.style.height = "150px";
     tempScore = 0;
     updateScore();
-    setTimeout(resetBalloon, 1000); // 1秒后恢复
+    practiceTrial++;
+    updateTrialCounter();
+    setTimeout(resetBalloon, 1000);
     return;
   }
-  // 气球放大
   balloonWidth *= (1 + pumpIncrease);
   balloonHeight *= (1 + pumpIncrease);
-  updateBalloonSize();
+  document.getElementById("balloon").style.width = balloonWidth + "px";
+  document.getElementById("balloon").style.height = balloonHeight + "px";
   tempScore += tempIncrease;
   updateScore();
 }
 
-function cashOut() {
+function practiceCashOut() {
   permScore += tempScore;
   tempScore = 0;
   updateScore();
+  practiceTrial++;
+  updateTrialCounter();
   resetBalloon();
-}
-
-function resetBalloon() {
-  balloonWidth = 100; // 重置初始尺寸
-  balloonHeight = 200;
-  balloonExploded = false;
-  let balloonImg = document.getElementById("balloon");
-  balloonImg.src = "https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/balloon.png";
-  updateBalloonSize();
 }
 
 function updateScore() {
@@ -154,10 +184,96 @@ function updateScore() {
   document.getElementById("permScore").innerText = permScore;
 }
 
-function updateBalloonSize() {
+function updateTrialCounter() {
+  document.getElementById("trial-counter").innerText = `练习：${practiceTrial}/${practiceTotal}`;
+  if(practiceTrial >= practiceTotal) {
+    document.getElementById("practice").style.display = "none";
+    document.getElementById("start-experiment-page").style.display = "block";
+  }
+}
+
+function resetBalloon() {
+  balloonWidth = 100;
+  balloonHeight = 200;
+  balloonExploded = false;
   let balloonImg = document.getElementById("balloon");
+  balloonImg.src = "https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/balloon.png";
   balloonImg.style.width = balloonWidth + "px";
   balloonImg.style.height = balloonHeight + "px";
+}
+
+// ------------------正式实验------------------
+function startExperimentReal() {
+  document.getElementById("start-experiment-page").style.display = "none";
+  document.getElementById("experiment-real").style.display = "block";
+  experimentTrial = 0;
+  updateTrialCounterReal();
+  document.addEventListener('keyup', experimentKeyHandler);
+  updateBalloonSizeReal();
+}
+
+function experimentKeyHandler(event) {
+  if(balloonExplodedReal) return;
+  if(event.key === "f" || event.key === "F") {
+    experimentPump();
+  } else if(event.key === "j" || event.key === "J") {
+    experimentCashOut();
+  }
+}
+
+function experimentPump() {
+  let explodeCheck = Math.floor(Math.random() * explodeRange) + 1;
+  if(explodeCheck === 1) {
+    balloonExplodedReal = true;
+    let balloonImg = document.getElementById("balloonReal");
+    balloonImg.src = "https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/explode.png";
+    balloonImg.style.width = "150px";
+    balloonImg.style.height = "150px";
+    tempScoreReal = 0;
+    updateScoreReal();
+    experimentTrial++;
+    updateTrialCounterReal();
+    setTimeout(resetBalloonReal, 1000);
+    return;
+  }
+  balloonWidthReal *= (1 + pumpIncrease);
+  balloonHeightReal *= (1 + pumpIncrease);
+  updateBalloonSizeReal();
+  tempScoreReal += tempIncrease;
+  updateScoreReal();
+}
+
+function experimentCashOut() {
+  permScoreReal += tempScoreReal;
+  tempScoreReal = 0;
+  updateScoreReal();
+  experimentTrial++;
+  updateTrialCounterReal();
+  resetBalloonReal();
+}
+
+function updateScoreReal() {
+  document.getElementById("tempScoreReal").innerText = tempScoreReal;
+  document.getElementById("permScoreReal").innerText = permScoreReal;
+}
+
+function updateTrialCounterReal() {
+  document.getElementById("trial-counter-real").innerText = `正式实验：${experimentTrial}/${experimentTotal}`;
+}
+
+function updateBalloonSizeReal() {
+  let balloonImg = document.getElementById("balloonReal");
+  balloonImg.style.width = balloonWidthReal + "px";
+  balloonImg.style.height = balloonHeightReal + "px";
+}
+
+function resetBalloonReal() {
+  balloonWidthReal = 100;
+  balloonHeightReal = 200;
+  balloonExplodedReal = false;
+  let balloonImg = document.getElementById("balloonReal");
+  balloonImg.src = "https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/balloon.png";
+  updateBalloonSizeReal();
 }
 </script>
 
