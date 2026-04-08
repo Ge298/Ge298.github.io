@@ -17,7 +17,7 @@
   }
   #balloon {
     width: 100px; /* 初始气球宽度，可修改 */
-    height: 100px; /* 初始气球高度，可修改 */
+    height: 200px; /* 初始气球高度，可修改 */
   }
   #score {
     display: flex;
@@ -67,10 +67,11 @@ let subID = "";
 let tempScore = 0;
 let permScore = 0;
 let balloonWidth = 100; // 初始气球宽度，可修改
-let balloonHeight = 100; // 初始气球高度，可修改
-let pumpIncrease = 0.02; // 每次放大百分比，可修改
+let balloonHeight = 200; // 初始气球高度，可修改
+let pumpIncrease = 0.05; // 每次放大百分比，可修改
 let tempIncrease = 5; // 每次 pump 临时积分，可修改
 let explodeRange = 30; // 随机爆炸范围，可修改
+let balloonExploded = false; // 标记是否爆炸
 
 function nextStep1() {
   subID = document.getElementById("subID").value;
@@ -96,11 +97,12 @@ function disagree() {
 function startExperiment() {
   document.getElementById("step4").style.display = "none";
   document.getElementById("experiment").style.display = "block";
-  document.addEventListener('keydown', keyHandler);
+  document.addEventListener('keyup', keyHandler); // 改为 keyup，防止长按
   updateBalloonSize();
 }
 
 function keyHandler(event) {
+  if(balloonExploded) return; // 爆炸后暂不响应按键
   if(event.key === "f" || event.key === "F") {
     pump();
   } else if(event.key === "j" || event.key === "J") {
@@ -112,8 +114,12 @@ function pump() {
   // 随机爆炸判定
   let explodeCheck = Math.floor(Math.random() * explodeRange) + 1;
   if(explodeCheck === 1) {
-    // 爆炸
-    document.getElementById("balloon").src = "https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/explode.png";
+    balloonExploded = true;
+    // 替换为固定大小爆炸图片
+    let balloonImg = document.getElementById("balloon");
+    balloonImg.src = "https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/explode.png";
+    balloonImg.style.width = "150px"; // 固定宽度
+    balloonImg.style.height = "150px"; // 固定高度
     tempScore = 0;
     updateScore();
     setTimeout(resetBalloon, 1000); // 1秒后恢复
@@ -122,8 +128,7 @@ function pump() {
   // 气球放大
   balloonWidth *= (1 + pumpIncrease);
   balloonHeight *= (1 + pumpIncrease);
-  document.getElementById("balloon").style.width = balloonWidth + "px";
-  document.getElementById("balloon").style.height = balloonHeight + "px";
+  updateBalloonSize();
   tempScore += tempIncrease;
   updateScore();
 }
@@ -137,8 +142,10 @@ function cashOut() {
 
 function resetBalloon() {
   balloonWidth = 100; // 重置初始尺寸
-  balloonHeight = 100;
-  document.getElementById("balloon").src = "https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/balloon.png";
+  balloonHeight = 200;
+  balloonExploded = false;
+  let balloonImg = document.getElementById("balloon");
+  balloonImg.src = "https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/balloon.png";
   updateBalloonSize();
 }
 
@@ -148,8 +155,9 @@ function updateScore() {
 }
 
 function updateBalloonSize() {
-  document.getElementById("balloon").style.width = balloonWidth + "px";
-  document.getElementById("balloon").style.height = balloonHeight + "px";
+  let balloonImg = document.getElementById("balloon");
+  balloonImg.style.width = balloonWidth + "px";
+  balloonImg.style.height = balloonHeight + "px";
 }
 </script>
 
