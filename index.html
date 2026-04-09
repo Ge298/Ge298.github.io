@@ -333,7 +333,8 @@ function endExperiment(){
     `总积分：${totalScore} ｜ 总时间：${(totalTime/1000).toFixed(2)}秒`;
 
   // CSV1
-  let csv1="subID,phase,trial,pump,exploded,totalScore,explosionPoint,rt\n";
+  let csv1=`TotalTime(s),${(totalTime/1000).toFixed(2)}\n`;
+    csv1+= "subID,phase,trial,pump,exploded,totalScore,explosionPoint,rt\n";
   trialData.forEach(d=>{
     csv1+=`${d.subID},${d.phase},${d.trial},${d.pumpCount},${d.exploded},${d.totalScore},${d.explosionPoint},${d.rt}\n`;
   });
