@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>BART 实验</title>
+<title>心理学实验</title>
 
 <style>
 body { font-family: Arial; text-align: center; }
@@ -124,11 +124,12 @@ const pumpIncrease=0.02
 let trialStartTime = 0;
 let expStartTime = 0;
 let explosionPoint = 0;  
-
+let totalScore_practice = 0; // 新增：练习积分
+let totalScore_formal = 0;   // 新增：正式实验积分
 // 数据
 let trialData = [];
 let keyData = [];
-
+let keyPressed = false; // 新增：防止长按重复计数
 // ===== 步骤 =====
 function nextStep1(){
   subID = document.getElementById("subID").value;
@@ -209,8 +210,10 @@ explosionPoint = Math.floor(Math.random()*32)+1;
 console.log("本气球爆炸点:", explosionPoint);
 // ===== 按键 =====
 function keyHandler(e){
-
   if(!["f","F","j","J"].includes(e.key)) return;
+
+  if(keyPressed) return; // 新增：长按不重复触发
+  keyPressed = true;
 
   let rt = performance.now() - trialStartTime;
 
@@ -222,16 +225,15 @@ function keyHandler(e){
 
   // F
   if(e.key==="f"||e.key==="F"){
-balloonSize *= (1 + pumpIncrease);
+    balloonSize *= (1 + pumpIncrease);
 
-let balloon = document.getElementById("balloon");
-balloon.style.transform = `scale(${balloonSize})`;
+    let balloon = document.getElementById("balloon");
+    balloon.style.transform = `scale(${balloonSize})`;
     pumpCount++;
-    tempScore+=5;
+    tempScore += 5;
     updateUI();
 
     if(pumpCount >= explosionPoint){
-
       document.getElementById("balloon").src="https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/explode.png";
 
       saveTrial(rt,1);
@@ -248,8 +250,13 @@ balloon.style.transform = `scale(${balloonSize})`;
 
   // J
   if(e.key==="j"||e.key==="J"){
-
-    totalScore+=tempScore;
+    if(phase==="practice"){
+        totalScore_practice += tempScore;
+        totalScore = totalScore_practice;
+    } else {
+        totalScore_formal += tempScore;
+        totalScore = totalScore_formal;
+    }
 
     saveTrial(rt,0);
 
@@ -261,6 +268,9 @@ balloon.style.transform = `scale(${balloonSize})`;
     nextTrial();
   }
 }
+
+// 释放按键后允许再次触发
+document.addEventListener("keyup", ()=>{ keyPressed=false; });
 
 // ===== 保存 =====
 function saveTrial(rt,exploded){
