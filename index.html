@@ -123,6 +123,7 @@ let balloonSize=1
 const pumpIncrease=0.02
 let trialStartTime = 0;
 let expStartTime = 0;
+let explosionPoint = 0;  
 
 // 数据
 let trialData = [];
@@ -189,6 +190,7 @@ function nextTrial(){
   tempScore = 0;
   pumpCount = 0;
 balloonSize = 1
+explosionPoint = Math.floor(Math.random()*32)+1;
   updateUI();
 
   document.getElementById("balloon").style.display="none";
@@ -204,7 +206,7 @@ balloonSize = 1
 
   },1000);
 }
-
+console.log("本气球爆炸点:", explosionPoint);
 // ===== 按键 =====
 function keyHandler(e){
 
@@ -228,7 +230,7 @@ balloon.style.transform = `scale(${balloonSize})`;
     tempScore+=5;
     updateUI();
 
-    if(Math.floor(Math.random()*32)+1===1){
+    if(pumpCount >= explosionPoint){
 
       document.getElementById("balloon").src="https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/explode.png";
 
