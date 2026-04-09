@@ -179,14 +179,20 @@ function nextTrial(){
 
   if(trialIndex >= trialTotal){
 
-    if(phase==="practice"){
-      phase="formal";
-      trialTotal=formalTotal;
-      trialIndex=0;
-      alert("练习结束，进入正式实验");
-      nextTrial();
-      return;
-    }
+   if(phase==="practice"){
+  phase="formal";
+  trialTotal = formalTotal;
+  trialIndex = 0;
+
+  // 核心：清空正式实验积分
+  totalScore = 0;
+  totalScore_formal = 0;
+  tempScore = 0;
+
+  alert("练习结束，进入正式实验");
+  nextTrial();
+  return;
+}
 
     if(phase==="formal"){
       endExperiment();
