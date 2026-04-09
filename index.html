@@ -240,18 +240,27 @@ function keyHandler(e){
     updateUI();
 
     if(pumpCount >= explosionPoint){
-      document.getElementById("balloon").src="https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/explode.png";
+  let balloon = document.getElementById("balloon");
 
-      saveTrial(rt,1);
+  // 立刻显示爆炸图片
+  balloon.src = "https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/explode.png";
 
-      document.removeEventListener("keydown", keyHandler);
+  // 禁止重复按键
+  document.removeEventListener("keydown", keyHandler);
 
-      setTimeout(()=>{
-        resetBalloon();
-        trialIndex++;
-        nextTrial();
-      },1500);
-    }
+  // 保存数据，延迟一点确保图片渲染
+  setTimeout(() => {
+    saveTrial(rt, 1);
+
+    // 再停留 1.5 秒显示爆炸
+    setTimeout(() => {
+      resetBalloon();  // 重置气球
+      trialIndex++;
+      nextTrial();     // 进入下一轮（十字+气球）
+    }, 1500);
+
+  }, 50); // 50ms 保证浏览器先渲染图片
+}
   }
 
   // J
