@@ -267,6 +267,7 @@ function saveTrial(rt,exploded){
   trialData.push({
     subID,phase,trial:trialIndex+1,
     pumpCount,exploded,totalScore,
+    explosionPoint,
     rt:rt.toFixed(2)
   });
 }
@@ -298,9 +299,9 @@ function endExperiment(){
     `总积分：${totalScore} ｜ 总时间：${(totalTime/1000).toFixed(2)}秒`;
 
   // CSV1
-  let csv1="subID,phase,trial,pump,exploded,totalScore,rt\n";
+  let csv1="subID,phase,trial,pump,exploded,totalScore,explosionPoint,rt\n";
   trialData.forEach(d=>{
-    csv1+=`${d.subID},${d.phase},${d.trial},${d.pumpCount},${d.exploded},${d.totalScore},${d.rt}\n`;
+    csv1+=`${d.subID},${d.phase},${d.trial},${d.pumpCount},${d.exploded},${d.totalScore},${d.explosionPoint},${d.rt}\n`;
   });
 
   document.getElementById("downloadCSV").onclick=()=>{
