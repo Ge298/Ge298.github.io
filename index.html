@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>欢迎参与心理学实验！</title>
+<title>感谢您的参与,祝您生活愉快!</title>
 
 <style>
 body { font-family: Arial; text-align: center; }
@@ -67,14 +67,22 @@ body { font-family: Arial; text-align: center; }
 按F充气，按J收集</p >
 <button onclick="nextStep2()">下一步</button>
 </div>
-
-<!-- Step3 -->
-<div id="step3" style="display:none">
-<h2>是否同意参加实验？</h2>
+  
+<!-- Step3：正式实验指导语 + 同意按钮 -->
+<div id="step3" style="display:none; text-align:center;">
+<p>
+在这个任务中，你将看见一个气球。<br>
+按 F 键 给气球充气，每按一次会使气球变大，并获得积分。<br>
+气球可能在任意一次充气时爆炸，如果爆炸，那么本轮所获得积分将全部失去。<br>
+你可以在任意时候按 J 键 停止充气并收集当前积分，这样这些积分会安全加入你的总得分。<br>
+现在进入 <strong>正式实验</strong>，请根据风险与回报权衡策略进行操作，尽量累积总积分。<br>
+每轮结束后，气球大小将重置。<br><br>
+是否同意参加实验？
+</p >
 <button onclick="agree()">是</button>
 <button onclick="disagree()">否</button>
 </div>
-
+  
 <!-- Step4 -->
 <div id="step4" style="display:none">
 <h2>开始练习</h2>
