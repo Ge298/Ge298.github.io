@@ -239,11 +239,14 @@ function keyHandler(e){
     tempScore += 5;
     updateUI();
 
-    if(pumpCount >= explosionPoint){
+if(pumpCount >= explosionPoint){
   let balloon = document.getElementById("balloon");
 
-  // 立刻显示爆炸图片
+  // 立刻显示爆炸图片，固定大小
   balloon.src = "https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/explode.png";
+  balloon.style.transform = "scale(1)";
+  balloon.style.width = "100px";
+  balloon.style.height = "180px";
 
   // 禁止重复按键
   document.removeEventListener("keydown", keyHandler);
