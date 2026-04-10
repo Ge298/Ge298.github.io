@@ -37,7 +37,6 @@ body { font-family: Arial; text-align: center; }
 </head>
 <body>
 
-<!-- 实验步骤界面 -->
 <div id="step1">
 <h2>欢迎参与心理学实验,请输入参与者编号:</h2>
 <input id="subID"><br>
@@ -66,7 +65,6 @@ body { font-family: Arial; text-align: center; }
 <button onclick="startExperiment()">开始</button>
 </div>
 
-<!-- 实验界面 -->
 <div id="experiment" style="display:none">
 <div id="score">
   <div>临时积分: <span id="tempScore">0</span></div>
@@ -76,14 +74,13 @@ body { font-family: Arial; text-align: center; }
 
 <div id="balloon-area">
   <div id="fixation">+</div>
-  < img id="balloon" src="">
-  < img id="explode" src="">
+  < img id="balloon">
+  < img id="explode">
 </div>
 
 <p>F=充气 J=收集</p >
 </div>
 
-<!-- 结束界面 -->
 <div id="end" style="display:none">
 <h2>实验结束</h2>
 <p id="finalText"></p >
@@ -95,32 +92,35 @@ body { font-family: Arial; text-align: center; }
 <script>
 // ================== 基本参数 ==================
 let subID = "";
-let phase = "practice";           // 实验阶段：练习/practice 或正式/formal
-let trialIndex = 0;               // 当前试次序号
-let trialTotal = 10;              // 本阶段总试次
-const practiceTotal = 10;         // 练习总试次
-const formalTotal = 20;           // 正式实验总试次
+let phase = "practice";
+let trialIndex = 0;
+let trialTotal = 10;
+const practiceTotal = 10;
+const formalTotal = 20;
 
-let tempScore = 0;                // 临时积分
-let totalScore_practice = 0;      // 练习总积分
-let totalScore_formal = 0;        // 正式实验总积分
-let pumpCount = 0;                // 当前试次充气次数
-let balloonSize = 1;              // 气球缩放比例
-const pumpIncrease = 0.04;        // 每次充气增加比例
-let explosionPoint = 0;           // 当前试次爆炸点
-let trialStartTime = 0;           // 当前试次开始时间
-let expStartTime = 0;             // 整个实验开始时间
-let keyPressed = false;           // 防止长按重复触发
+let tempScore = 0;
+let totalScore_practice = 0;
+let totalScore_formal = 0;
+let totalScore = 0;
+
+let pumpCount = 0;
+let balloonSize = 1;
+const pumpIncrease = 0.04;
+let explosionPoint = 0;
+
+let trialStartTime = 0;
+let expStartTime = 0;
+let keyPressed = false;
 
 // ================== 数据记录 ==================
-let trialData = []; // 每试次统计
-let keyData = [];   // 按键时间记录
+let trialData = [];
+let keyData = [];
 
-// ================== 图片预加载 ==================
+// ================== 图片预加载（本地路径版） ==================
 const images = {};
 ["balloon","explode"].forEach(name=>{
   images[name] = new Image();
-  images[name].src = `https://raw.githubusercontent.com/Ge298/Ge298.github.io/main/${name}.png`;
+  images[name].src = `${name}.png`;  // ✅ 本地加载
 });
 
 // ================== 步骤控制 ==================
@@ -148,12 +148,14 @@ function disagree(){
 // ================== 开始实验 ==================
 function startExperiment(){
   expStartTime = Date.now();
+
+  // ✅ 提前加载图片（防卡顿）
+  document.getElementById("balloon").src = images["balloon"].src;
+  document.getElementById("explode").src = images["explode"].src;
+
   phase = "practice";
   trialTotal = practiceTotal;
   trialIndex = 0;
-  tempScore = 0;
-  pumpCount = 0;
-  totalScore = 0;
 
   document.getElementById("step4").style.display="none";
   document.getElementById("experiment").style.display="block";
@@ -168,9 +170,6 @@ function nextTrial(){
       phase="formal";
       trialTotal = formalTotal;
       trialIndex = 0;
-      tempScore = 0;
-      totalScore_formal = 0;
-      totalScore = 0;
       alert("练习结束，进入正式实验");
       nextTrial();
       return;
@@ -180,30 +179,30 @@ function nextTrial(){
     }
   }
 
-  // 初始化本试次
   tempScore = 0;
   pumpCount = 0;
   balloonSize = 1;
-  explosionPoint = Math.floor(Math.random()*32)+1; // 随机爆炸点
+  explosionPoint = Math.floor(Math.random()*32)+1;
+
   updateUI();
 
-  // 显示注视点
   document.getElementById("balloon").style.display="none";
   document.getElementById("explode").style.display="none";
   document.getElementById("fixation").style.display="block";
 
   setTimeout(()=>{
     document.getElementById("fixation").style.display="none";
-    document.getElementById("balloon").src = images["balloon"].src;
-    document.getElementById("balloon").style.display="block";
-    document.getElementById("balloon").style.transform = "scale(1)";
+
+    const balloon = document.getElementById("balloon");
+    balloon.style.display="block";
+    balloon.style.transform = "scale(1)";
 
     trialStartTime = performance.now();
     document.addEventListener("keydown", keyHandler);
   }, 1000);
 }
 
-// ================== 按键逻辑 ==================
+// ================== 按键 ==================
 function keyHandler(e){
   if(!["f","F","j","J"].includes(e.key)) return;
   if(keyPressed) return;
@@ -220,7 +219,6 @@ function keyHandler(e){
   const balloon = document.getElementById("balloon");
   const explode = document.getElementById("explode");
 
-  // F键：气球充气
   if(e.key==="f"||e.key==="F"){
     balloonSize *= (1 + pumpIncrease);
     balloon.style.transform = `scale(${balloonSize})`;
@@ -229,18 +227,13 @@ function keyHandler(e){
     updateUI();
 
     if(pumpCount >= explosionPoint){
-      // 气球消失，显示爆炸图
       balloon.style.display="none";
-      explode.src = images["explode"].src;
       explode.style.display="block";
-      explode.style.transform = "scale(1)";
 
       document.removeEventListener("keydown", keyHandler);
 
-      // 后台保存试次数据
       saveTrial(rt,1);
 
-      // 1.5秒后隐藏爆炸图，进入下一试次
       setTimeout(()=>{
         explode.style.display="none";
         trialIndex++;
@@ -249,7 +242,6 @@ function keyHandler(e){
     }
   }
 
-  // J键：收集积分
   if(e.key==="j"||e.key==="J"){
     if(phase==="practice"){
       totalScore_practice += tempScore;
@@ -260,17 +252,18 @@ function keyHandler(e){
     }
 
     saveTrial(rt,0);
+
     document.removeEventListener("keydown", keyHandler);
-    balloon.style.display="none"; // 气球消失
+    balloon.style.display="none";
+
     trialIndex++;
     nextTrial();
   }
 }
 
-// 释放按键后允许再次触发
 document.addEventListener("keyup", ()=>{ keyPressed=false; });
 
-// ================== 保存试次数据 ==================
+// ================== 数据 ==================
 function saveTrial(rt, exploded){
   trialData.push({
     subID, phase, trial: trialIndex+1,
@@ -279,24 +272,25 @@ function saveTrial(rt, exploded){
   });
 }
 
-// ================== 更新UI ==================
 function updateUI(){
   document.getElementById("tempScore").innerText = tempScore;
   document.getElementById("totalScore").innerText = totalScore;
   document.getElementById("trial-counter").innerText = `${phase} ${trialIndex+1}/${trialTotal}`;
 }
 
-// ================== 结束实验 ==================
+// ================== 结束 ==================
 function endExperiment(){
   const totalTime = Date.now() - expStartTime;
+
   document.getElementById("experiment").style.display="none";
   document.getElementById("end").style.display="block";
-  document.getElementById("finalText").innerText = 
+
+  document.getElementById("finalText").innerText =
     `总积分：${totalScore} ｜ 总时间：${(totalTime/1000).toFixed(2)}秒`;
 
-  // 导出试次数据
   let csv1=`TotalTime(s),${(totalTime/1000).toFixed(2)}\n`;
   csv1+= "subID,phase,trial,pumpCount,exploded,tempScore,explosionPoint,rt\n";
+
   trialData.forEach(d=>{
     csv1+=`${d.subID},${d.phase},${d.trial},${d.pumpCount},${d.exploded},${d.tempScore},${d.explosionPoint},${d.rt}\n`;
   });
@@ -308,7 +302,6 @@ function endExperiment(){
     a.click();
   };
 
-  // 导出按键时间数据
   let csv2="subID,phase,trial,key,rt,time\n";
   keyData.forEach(d=>{
     csv2+=`${d.subID},${d.phase},${d.trial},${d.key},${d.rt},${d.time}\n`;
